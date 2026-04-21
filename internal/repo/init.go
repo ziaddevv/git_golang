@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"mygit/internal/utils"
 	"os"
 	"path/filepath"
 	// "mygit/internal/utils"
@@ -14,7 +15,6 @@ func Init() error {
 		prfxName = os.Args[2]
 	}
 
-
 	workingDir, err := os.Getwd()
 
 	if err != nil {
@@ -26,8 +26,7 @@ func Init() error {
 
 	path := filepath.Join(workingDir, prfxName, ".mygit")
 
-	fmt.Println("path:", path, "\n foldername", prfxName)
-
+	// fmt.Println("path:", path, "\n foldername", prfxName)
 
 	//folders
 
@@ -79,9 +78,20 @@ func Init() error {
 		return err
 	}
 
+	//files
+	headFile := filepath.Join(path, "HEAD")
+	err = utils.WriteFile(headFile, []byte("ref: refs/heads/master"))
 
-	//files 
-	
+	if err != nil {
+		return err
+	}
+
+	descriptionFile := filepath.Join(path, "description")
+	err = utils.WriteFile(descriptionFile, []byte("rename to give a description to the repository"))
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
