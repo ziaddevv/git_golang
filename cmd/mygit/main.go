@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"mygit/internal/cli"
+)
 
 func main() {
-	fmt.Println("hello")
+
+	cli.Run()
+
 }
