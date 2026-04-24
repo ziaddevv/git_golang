@@ -99,15 +99,3 @@ func Init() error {
 func SayHello() {
 	fmt.Println("fuck ")
 }
-
-func createandWriteFile(path string, content string) {
-	file, err := os.Create(path)
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer file.Close()
-
-	_, err = file.WriteString("")
-}

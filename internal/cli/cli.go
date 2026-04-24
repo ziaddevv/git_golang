@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"mygit/internal/repo"
 	"os"
 )
 
@@ -16,8 +17,16 @@ func Run() {
 	switch os.Args[1] {
 	case "init":
 		InitCommand()
-	case "go":
-		fmt.Println("go")
+	case "hash-object": // a genirec object creator , like it can work with all objects + it does't unserstand the high level semantics , it just takes bytes and type and it write it in objects folder
+		//TODO make the command takes input from file  or std
+		// git hash-object file.txt      --> just hash object
+		// git hash-object -w file.txt   --> hash and write
+		// echo -n "hello" | git hash-object --stdin    ---> pipe text directly
+		//echo -n "hello" | git hash-object -w --stdin  --> pipe text and write the object
+		//printf "a.txt\nb.txt\n" | git hash-object --stdin-paths --> path names from stdin
+		hash, err := repo.WriteObject("blob", []byte("hello"))
+
+		fmt.Println(hash, err)
 	}
 }
 

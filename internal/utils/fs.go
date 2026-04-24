@@ -1,12 +1,27 @@
 package utils
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
 
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+func CreateDir(name string, path string) error {
+	fullPath := filepath.Join(path, name)
+
+	err := os.MkdirAll(fullPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
 func CreateEmptyFile(path string) error {
 	file, err := os.Create(path)
 	if err != nil {
@@ -17,6 +32,20 @@ func CreateEmptyFile(path string) error {
 
 func WriteFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0644)
+}
+func WWriteFileSafely(path string, data []byte) error { // same as write to fie but it checks the folder existing and creating it if not
+	folderPath := filepath.Dir(path)
+
+	err := os.MkdirAll(folderPath, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create directories: %w", err)
+	}
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
 }
 
 func AppendFile(path string, data []byte) error {
@@ -32,4 +61,8 @@ func AppendFile(path string, data []byte) error {
 
 	_, err = file.Write(data)
 	return err
+}
+
+func ReadFile(path string) ([]byte, error) {
+	return os.ReadFile(path)
 }
