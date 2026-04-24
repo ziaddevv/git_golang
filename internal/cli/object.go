@@ -1,6 +1,0 @@
-package cli
-
-
-func HashObjectCommand(){
-	
-}

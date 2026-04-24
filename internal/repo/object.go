@@ -11,19 +11,21 @@ import (
 
 // [type] + " " + [size] + \0 + [content]          , sh1 hash is the object id
 
+// TODO compress before storing
+
+func HashObject(objType string, content []byte) ([]byte, string) {
+	data := fmt.Sprintf("%s %d\x00%s", objType, len(content), string(content))
+	rawBytes := []byte(data)
+	hash := utils.Hash(rawBytes)
+	return rawBytes, hash
+}
 func WriteObject(objType string, content []byte) (string, error) {
 
-	//TODO but this in the function calling this
 	if !utils.Exists(utils.RepoDir()) {
 		return "", errors.New("not a repository")
 	}
 
-	data := fmt.Sprintf("%s %d\x00%s", objType, len(content), string(content))
-	rawBytes := []byte(data)
-	fmt.Println("rawbytes", rawBytes)
-	// data := append([]byte(objType))
-
-	hash := utils.Hash(rawBytes)
+	rawBytes, hash := HashObject(objType, content)
 	path := utils.ObjectPath(hash)
 
 	if utils.Exists(path) {
@@ -38,6 +40,25 @@ func WriteObject(objType string, content []byte) (string, error) {
 
 	return hash, nil
 }
+
+// func BlobObject(,write bool)([]byte , err){
+// 	var data []byte
+// 	var err error
+
+// 	return  data ,err
+// }
+// func TreeObject()([]byte , err){
+// 	var data []byte
+// 	var err error
+
+// 	return  data ,err
+// }
+// func CommitObject()([]byte , err){
+// 	var data []byte
+// 	var err error
+
+// 	return  data ,err
+// }
 
 func ReadObject(hash string) ([]byte, error) {
 	path := utils.ObjectPath(hash)

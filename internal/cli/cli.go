@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"mygit/internal/repo"
 	"os"
 )
 
@@ -24,9 +23,9 @@ func Run() {
 		// echo -n "hello" | git hash-object --stdin    ---> pipe text directly
 		//echo -n "hello" | git hash-object -w --stdin  --> pipe text and write the object
 		//printf "a.txt\nb.txt\n" | git hash-object --stdin-paths --> path names from stdin
-		hash, err := repo.WriteObject("blob", []byte("hello"))
-
-		fmt.Println(hash, err)
+		// hash, err := repo.WriteObject("blob", []byte("hello"))
+		HashObjectCommand()
+		// fmt.Println(hash, err)
 	}
 }
 
