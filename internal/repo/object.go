@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"mygit/internal/utils"
+	"os"
+	"strings"
 )
 
 //   converting from []byte to string ---> []byte(mystring)
@@ -62,5 +64,30 @@ func WriteObject(objType string, content []byte) (string, error) {
 
 func ReadObject(hash string) ([]byte, error) {
 	path := utils.ObjectPath(hash)
-	return utils.ReadFile(path)
+
+	return os.ReadFile(path)
 }
+func SplitByByte(data []byte, target byte) ([]byte, []byte) {
+	for i, b := range data {
+		if b == target {
+			return data[:i], data[i+1:]
+		}
+	}
+	return data, nil // target not found
+}
+
+func ParseObject(object []byte) (string, []byte) {
+	header, content := SplitByByte(object, '\x00')
+	objType := strings.Split(string(header), " ")[0]
+	return objType, content
+}
+
+/*
+
+
+
+
+
+
+
+ */

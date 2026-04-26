@@ -26,6 +26,8 @@ func Run() {
 		// hash, err := repo.WriteObject("blob", []byte("hello"))
 		HashObjectCommand()
 		// fmt.Println(hash, err)
+	case "cat-file":
+		CatFileCommand()
 	}
 }
 
