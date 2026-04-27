@@ -28,6 +28,11 @@ func Run() {
 		// fmt.Println(hash, err)
 	case "cat-file":
 		CatFileCommand()
+
+	case "update-index":
+		// UpdateIndex()
+		// fmt.Println(utils.ReadFile("/home/ziad/projects/test/tests/.git/index"))
+		UpdateIndexCommand()
 	}
 }
 

@@ -11,6 +11,11 @@ func Exists(path string) bool {
 	return err == nil
 }
 
+func ObjectExists(hash string) bool {
+	objPath := ObjectPath(hash)
+	return Exists(objPath)
+}
+
 func CreateDir(name string, path string) error {
 	fullPath := filepath.Join(path, name)
 

@@ -23,3 +23,7 @@ func ObjectsDir() string {
 func ObjectPath(hash string) string {
 	return filepath.Join(ObjectsDir(), hash[0:2], hash[2:])
 }
+
+func IndexPath()string{
+	return "INDEX"
+}
