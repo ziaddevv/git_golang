@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mygit/internal/index"
 	"mygit/internal/repo"
-	"mygit/internal/utils"
 	"os"
 	"path/filepath"
 	"sort"
@@ -61,12 +60,14 @@ func BuildTree(idx *index.Index) *Tree {
 type TrieNode struct {
 	Children map[string]*TrieNode
 	Entry    *TreeEntry
+	IsFile   bool
 }
 
 func NewTrieNode() *TrieNode {
 	return &TrieNode{
 		Children: make(map[string]*TrieNode),
 		Entry:    nil,
+		IsFile:   false,
 	}
 }
 
@@ -83,36 +84,45 @@ func (t *Trie) Insert(path []string, entry *TreeEntry) {
 		cur = cur.Children[str]
 	}
 	// fmt.Println(cur.Children)
-	cur.Entry = entry
+	cur.Entry = &TreeEntry{
+		Mode: entry.Mode,
+		Path: filepath.Base(entry.Path),
+		Hash: entry.Hash,
+	}
+	cur.IsFile = true
 }
 
 func (t *Trie) ParseTreeObject(cur *TrieNode, fullPath string) (*TreeEntry, error) {
 	if cur.IsFile == true {
 		// create blob and return
-		data, err := utils.ReadFile(fullPath)
-		if err != nil {
-			return nil, err
-		}
+		// data, err := utils.ReadFile(fullPath)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		hash, err := repo.WriteObject("blob", data)
+		// hash, err := repo.WriteObject("blob", data)
 
-		var sha [20]byte
-		raw, err := hex.DecodeString(hash)
-		if err != nil {
-			return nil, err
-		}
-		if len(raw) != 20 {
-			return nil, fmt.Errorf("invalid sha1 length")
-		}
-		copy(sha[:], raw)
+		// var sha [20]byte
+		// raw, err := hex.DecodeString(hash)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// if len(raw) != 20 {
+		// 	return nil, fmt.Errorf("invalid sha1 length")
+		// }
+		// copy(sha[:], raw)
 
-		mode := "100644"
-		path := filepath.Base(fullPath)
-		treeEntry := newTreeEntry(mode, path, sha)
-		return treeEntry, nil
+		// mode := "100644"
+		// path := filepath.Base(fullPath)
+		// treeEntry := newTreeEntry(mode, path, sha)
+
+		return cur.Entry, nil
 
 	}
-	fmt.Println(cur.Children)
+	// fmt.Println(cur.Children)
+	// for key, value := range cur.Children {
+
+	// }
 	// recurse on all children and return the hash
 	var entries []*TreeEntry
 	for key, val := range cur.Children {
@@ -196,4 +206,52 @@ func BuildTreeObject() {
 		os.Exit(1)
 	}
 	fmt.Printf("%x\n", rootEntry.Hash)
+
+	fmt.Println("-------------------")
+	PrintTrie(trie.Root, "")
+}
+
+// ------------
+func PrintTrie(root *TrieNode, prefix string) {
+	printTrieHelper(root, prefix, "")
+}
+
+func printTrieHelper(node *TrieNode, prefix, name string) {
+	if node == nil {
+		return
+	}
+
+	// Print current node
+	marker := ""
+	if node.IsFile {
+		marker = " [FILE]"
+	}
+
+	if name != "" {
+		fmt.Printf("%s%s%s\n", prefix, name, marker)
+	} else {
+		fmt.Println("root")
+	}
+
+	// Print Entry if exists
+	if node.Entry != nil {
+		fmt.Printf("%s   └─ Entry: %+v\n", prefix, node.Entry)
+	}
+
+	// Print children
+	for key, child := range node.Children {
+		newPrefix := prefix + "│   "
+		if key == getLastKey(node.Children) {
+			newPrefix = prefix + "    "
+		}
+		printTrieHelper(child, newPrefix, key)
+	}
+}
+
+// Helper to make tree look nicer (find last key)
+func getLastKey(m map[string]*TrieNode) string {
+	for k := range m {
+		return k // returns the last key in map iteration (not perfect but good enough for display)
+	}
+	return ""
 }
