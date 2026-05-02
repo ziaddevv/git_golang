@@ -49,12 +49,15 @@ func CatFileCommand() {
 	case *pretty:
 		switch objType {
 		case "blob":
-			fmt.Print(string(content))
+			fmt.Print(content)
 		case "tree":
-
+			// fmt.Print(string(content))
+			fmt.Print(repo.ParseTreeContent(content))
 		case "commit":
+			fmt.Print(content)
 
 		case "tag":
+			fmt.Print(content)
 
 		default:
 			fmt.Print(string(content))
