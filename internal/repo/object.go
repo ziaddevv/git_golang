@@ -15,12 +15,19 @@ import (
 
 // TODO compress before storing
 
+//	func HashObject(objType string, content []byte) ([]byte, string) {
+//		data := fmt.Sprintf("%s %d\x00%s", objType, len(content), string(content))
+//		rawBytes := []byte(data)
+//		hash := utils.Hash(rawBytes)
+//		return rawBytes, hash
+//	}
 func HashObject(objType string, content []byte) ([]byte, string) {
-	data := fmt.Sprintf("%s %d\x00%s", objType, len(content), string(content))
-	rawBytes := []byte(data)
+	header := []byte(fmt.Sprintf("%s %d\x00", objType, len(content)))
+	rawBytes := append(header, content...)
 	hash := utils.Hash(rawBytes)
 	return rawBytes, hash
 }
+
 func WriteObject(objType string, content []byte) (string, error) {
 
 	if !utils.Exists(utils.RepoDir()) {
