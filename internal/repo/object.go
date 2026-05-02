@@ -83,10 +83,17 @@ func ParseObject(object []byte) (string, []byte) {
 }
 
 /*
+	build tree --> construct the initial trees and add
+
+	each folder is a tree object
 
 
+	we need to build a trie tree
 
+->
+*/
 
+/*
 
 
 

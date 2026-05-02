@@ -33,6 +33,8 @@ func Run() {
 		// UpdateIndex()
 		// fmt.Println(utils.ReadFile("/home/ziad/projects/test/tests/.git/index"))
 		UpdateIndexCommand()
+	case "write-tree":
+		WriteTreeCommand()
 	}
 }
 

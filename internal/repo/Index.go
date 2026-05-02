@@ -53,26 +53,12 @@ func UpdateIndexAdd(path string) error {
 	if err != nil {
 		return err
 	}
-	hash := utils.Hash(file)
-
-	objExists := utils.ObjectExists(hash)
-
-	if objExists != true {
-		// create that object in object storage
-		hash, err = WriteObject("blob", file)
-		if err != nil {
-			return err
-		}
-	}
-
-	indexContent, err := utils.ReadFile(".mygit/INDEX")
-	var indexEntries *index.Index
+	hash, err := WriteObject("blob", file)
 	if err != nil {
-		// first time — index doesn't exist yet
-		indexEntries = &index.Index{}
-	} else {
-		indexEntries = index.UnpackIndex(indexContent)
+		return err
 	}
+
+	indexEntries := ReadIndex()
 	// indexEntries := index.UnpackIndex(indexContent)
 
 	// the entry
@@ -90,6 +76,17 @@ func UpdateIndexAdd(path string) error {
 	return Save(indexEntries)
 }
 
+func ReadIndex() *index.Index {
+	indexContent, err := utils.ReadFile(".mygit/INDEX")
+	var indexEntries *index.Index
+	if err != nil {
+		// first time — index doesn't exist yet
+		indexEntries = &index.Index{}
+	} else {
+		indexEntries = index.UnpackIndex(indexContent)
+	}
+	return indexEntries
+}
 func UpdateIndexRemove(path string) error {
 	indexContent, err := utils.ReadFile(".mygit/INDEX")
 	if err != nil {
