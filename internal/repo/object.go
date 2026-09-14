@@ -3,6 +3,7 @@ package repo
 import (
 	"bufio"
 	"bytes"
+	"compress/zlib"
 	"errors"
 	"fmt"
 	"io"
@@ -40,11 +41,23 @@ func WriteObject(objType string, content []byte) (string, error) {
 	rawBytes, hash := HashObject(objType, content)
 	path := utils.ObjectPath(hash)
 
+	fmt.Println(path)
 	if utils.Exists(path) {
 		return hash, nil
 	}
 
-	err := utils.WWriteFileSafely(path, rawBytes)
+	var buf bytes.Buffer
+
+	writer := zlib.NewWriter(&buf)
+	writer.Write(rawBytes)
+	writer.Close()
+
+	compressed := buf.Bytes()
+
+	fmt.Println("Original:", len(rawBytes))
+	fmt.Println("Compressed:", len(compressed))
+
+	err := utils.WWriteFileSafely(path, compressed)
 
 	if err != nil {
 		return "", err
@@ -75,7 +88,17 @@ func WriteObject(objType string, content []byte) (string, error) {
 func ReadObject(hash string) ([]byte, error) {
 	path := utils.ObjectPath(hash)
 
-	return os.ReadFile(path)
+	compressed, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("error:", err)
+		return []byte{}, nil
+	}
+
+	reader, err := zlib.NewReader(bytes.NewReader(compressed))
+	defer reader.Close()
+
+	decompressed, err := io.ReadAll(reader)
+	return decompressed, err
 }
 func SplitByByte(data []byte, target byte) ([]byte, []byte) {
 	for i, b := range data {

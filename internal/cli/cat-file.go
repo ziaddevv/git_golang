@@ -36,7 +36,6 @@ func CatFileCommand() {
 		fmt.Println("error:", err)
 		return
 	}
-
 	objType, content := repo.ParseObject(data)
 
 	switch {
@@ -49,7 +48,7 @@ func CatFileCommand() {
 	case *pretty:
 		switch objType {
 		case "blob":
-			fmt.Print(content)
+			fmt.Print(string(content))
 		case "tree":
 			// fmt.Print(string(content))
 			fmt.Print(repo.ParseTreeContent(content))
