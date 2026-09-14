@@ -36,7 +36,11 @@ func CatFileCommand() {
 		fmt.Println("error:", err)
 		return
 	}
-	objType, content := repo.ParseObject(data)
+	objType, content, err := repo.ParseObject(data)
+	if err != nil {
+		fmt.Println("error:", err)
+		return
+	}
 
 	switch {
 	case *typ:
