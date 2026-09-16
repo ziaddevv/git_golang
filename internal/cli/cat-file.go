@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"mygit/internal/repo"
+	"mygit/internal/object"
 	"os"
 
 	flag "github.com/spf13/pflag"
@@ -31,12 +31,12 @@ func CatFileCommand() {
 
 	hash := catFileCmd.Arg(0)
 
-	data, err := repo.ReadObject(hash)
+	data, err := object.ReadObject(hash)
 	if err != nil {
 		fmt.Println("error:", err)
 		return
 	}
-	objType, content, err := repo.ParseObject(data)
+	objType, content, err := object.ParseObject(data)
 	if err != nil {
 		fmt.Println("error:", err)
 		return
@@ -55,7 +55,7 @@ func CatFileCommand() {
 			os.Stdout.Write(content)
 		case "tree":
 			// fmt.Print(string(content))
-			fmt.Print(repo.ParseTreeContent(content))
+			fmt.Print(object.ParseTreeContent(content))
 		case "commit":
 			fmt.Print(content)
 

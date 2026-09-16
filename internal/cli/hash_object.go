@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"io"
-	"mygit/internal/repo"
+	"mygit/internal/object"
 	"mygit/internal/utils"
 	"os"
 
@@ -59,13 +59,13 @@ func HashObjectCommand() {
 
 	if *write {
 		fmt.Println("writing ", data)
-		hash, err = repo.WriteObject(*objType, data)
+		hash, err = object.WriteObject(*objType, data)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	} else {
-		_, hash = repo.HashObject(*objType, data)
+		_, hash = object.HashObject(*objType, data)
 	}
 
 	if err != nil {

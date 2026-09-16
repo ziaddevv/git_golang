@@ -1,10 +1,11 @@
-package object
+package tree
 
 import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
 	"mygit/internal/index"
+	"mygit/internal/object"
 	"mygit/internal/repo"
 	"os"
 	"path/filepath"
@@ -156,7 +157,7 @@ func (t *Trie) ParseTreeObject(cur *TrieNode, fullPath string) (*TreeEntry, erro
 	})
 
 	content := TreeContent(entries)
-	hash, err := repo.WriteObject("tree", content)
+	hash, err := object.WriteObject("tree", content)
 
 	if err != nil {
 		return nil, err
@@ -220,7 +221,7 @@ func BuildTreeObject() {
 
 	for _, entry := range tree.Entries {
 		fmt.Printf("%s %s %s\n", entry.Mode, "a", entry.Path)
-		if _, err := repo.ReadObject(fmt.Sprintf("%x", entry.Hash)); err != nil {
+		if _, err := object.ReadObject(fmt.Sprintf("%x", entry.Hash)); err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			os.Exit(1)
 		}

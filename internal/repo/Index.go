@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"mygit/internal/index"
+	"mygit/internal/object"
 	"mygit/internal/utils"
 	"os"
 	"strings"
@@ -48,7 +49,7 @@ func UpdateIndexAdd(path string) error {
 	if err != nil {
 		return err
 	}
-	hash, err := WriteObject("blob", file)
+	hash, err := object.WriteObject("blob", file)
 	if err != nil {
 		return err
 	}

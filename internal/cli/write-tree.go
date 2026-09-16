@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"mygit/internal/object"
+	"mygit/internal/tree"
 )
 
 /*
@@ -17,5 +17,5 @@ import (
 func WriteTreeCommand() {
 	// get the entries from index file
 	//create a tree object
-	object.BuildTreeObject()
+	tree.BuildTreeObject()
 }
