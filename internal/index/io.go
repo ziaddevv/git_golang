@@ -1,9 +1,8 @@
-package repo
+package index
 
 import (
 	"errors"
 	"fmt"
-	"mygit/internal/index"
 	"mygit/internal/object"
 	"mygit/internal/utils"
 	"os"
@@ -18,7 +17,7 @@ func UpdateIndexCacheInfo(cacheInfo string) error {
 	}
 	mode, hash, path := info[0], info[1], info[2]
 
-	entry, err := index.NewEntryFromCacheInfo(mode, hash, path)
+	entry, err := NewEntryFromCacheInfo(mode, hash, path)
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func UpdateIndexAdd(path string) error {
 
 	// the entry
 
-	entry, err := index.NewEntryFromFile(path, hash)
+	entry, err := NewEntryFromFile(path, hash)
 	// fmt.Println(entry)
 	if err != nil {
 		return err
@@ -75,17 +74,17 @@ func UpdateIndexAdd(path string) error {
 	return Save(indexEntries)
 }
 
-func ReadIndex() (*index.Index, error) {
+func ReadIndex() (*Index, error) {
 	indexContent, err := utils.ReadFile(".mygit/INDEX")
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			// first time — index doesn't exist yet
-			return &index.Index{}, nil
+			return &Index{}, nil
 		}
 		return nil, err
 	}
 
-	return index.UnpackIndex(indexContent), nil
+	return UnpackIndex(indexContent), nil
 }
 func UpdateIndexRemove(path string) error {
 	idx, err := ReadIndex()
@@ -97,7 +96,7 @@ func UpdateIndexRemove(path string) error {
 	return Save(idx)
 }
 
-func Save(idxEntries *index.Index) error {
+func Save(idxEntries *Index) error {
 
 	var path = ".mygit/INDEX"
 

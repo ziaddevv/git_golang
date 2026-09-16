@@ -96,6 +96,3 @@ func Init() error {
 	return nil
 }
 
-func SayHello() {
-	fmt.Println("fuck ")
-}

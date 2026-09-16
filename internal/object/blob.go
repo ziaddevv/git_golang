@@ -1,7 +1,6 @@
 package object
 
 import (
-	"bufio"
 	"bytes"
 	"compress/zlib"
 	"errors"
@@ -18,12 +17,6 @@ import (
 
 // [type] + " " + [size] + \0 + [content]          , sh1 hash is the object id
 
-//	func HashObject(objType string, content []byte) ([]byte, string) {
-//		data := fmt.Sprintf("%s %d\x00%s", objType, len(content), string(content))
-//		rawBytes := []byte(data)
-//		hash := utils.Hash(rawBytes)
-//		return rawBytes, hash
-//	}
 func IsValidObjectType(objType string) bool {
 	switch objType {
 	case "blob", "tree", "commit", "tag":
@@ -101,25 +94,6 @@ func WriteObject(objType string, content []byte) (string, error) {
 	return hash, nil
 }
 
-// func BlobObject(,write bool)([]byte , err){
-// 	var data []byte
-// 	var err error
-
-// 	return  data ,err
-// }
-// func TreeObject()([]byte , err){
-// 	var data []byte
-// 	var err error
-
-// 	return  data ,err
-// }
-// func CommitObject()([]byte , err){
-// 	var data []byte
-// 	var err error
-
-// 	return  data ,err
-// }
-
 func ReadObject(hash string) ([]byte, error) {
 	if !IsValidObjectID(hash) {
 		return nil, fmt.Errorf("invalid object id: %s", hash)
@@ -193,57 +167,4 @@ func ParseObject(object []byte) (string, []byte, error) {
 	}
 
 	return objType, content, nil
-}
-
-type TreeParsedEntry struct {
-	Mode string
-	Type string
-	Hash string
-	Name string
-}
-
-func ParseTreeContent(content []byte) string {
-	r := bufio.NewReader(bytes.NewReader(content))
-	var out strings.Builder
-
-	for {
-		entry, err := ReadTreeEntry(r)
-		if err != nil {
-			break
-		}
-		// format: 100644 blob b6fc4c620b67d95f    test.txt
-		fmt.Fprintf(&out, "%06s %s %s\t%s\n", entry.Mode, entry.Type, entry.Hash, entry.Name)
-	}
-
-	return out.String()
-}
-
-func ReadTreeEntry(r *bufio.Reader) (TreeParsedEntry, error) {
-	var e TreeParsedEntry
-
-	modeBytes, err := r.ReadBytes(' ')
-	if err != nil {
-		return e, err
-	}
-	e.Mode = string(modeBytes[:len(modeBytes)-1])
-
-	nameBytes, err := r.ReadBytes('\x00')
-	if err != nil {
-		return e, err
-	}
-	e.Name = string(nameBytes[:len(nameBytes)-1])
-
-	var sha [20]byte
-	if _, err := io.ReadFull(r, sha[:]); err != nil {
-		return e, err
-	}
-	e.Hash = fmt.Sprintf("%x", sha)
-
-	if e.Mode == "40000" {
-		e.Type = "tree"
-	} else {
-		e.Type = "blob"
-	}
-
-	return e, nil
 }

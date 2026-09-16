@@ -35,6 +35,8 @@ func Run() {
 		UpdateIndexCommand()
 	case "write-tree":
 		WriteTreeCommand()
+	case "commit-tree":
+		CommitTreeCommand()
 	}
 }
 

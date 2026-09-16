@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mygit/internal/index"
 	"mygit/internal/object"
-	"mygit/internal/repo"
 	"os"
 	"path/filepath"
 	"sort"
@@ -107,28 +106,6 @@ func (t *Trie) Insert(path []string, entry *TreeEntry) error {
 
 func (t *Trie) ParseTreeObject(cur *TrieNode, fullPath string) (*TreeEntry, error) {
 	if cur.IsFile == true {
-		// create blob and return
-		// data, err := utils.ReadFile(fullPath)
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		// hash, err := repo.WriteObject("blob", data)
-
-		// var sha [20]byte
-		// raw, err := hex.DecodeString(hash)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// if len(raw) != 20 {
-		// 	return nil, fmt.Errorf("invalid sha1 length")
-		// }
-		// copy(sha[:], raw)
-
-		// mode := "100644"
-		// path := filepath.Base(fullPath)
-		// treeEntry := newTreeEntry(mode, path, sha)
-
 		return cur.Entry, nil
 
 	}
@@ -207,7 +184,7 @@ func TreeContent(entries []*TreeEntry) []byte {
 strings.Split("/a//b", "/")
 */
 func BuildTreeObject() {
-	idx, err := repo.ReadIndex()
+	idx, err := index.ReadIndex()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)

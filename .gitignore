@@ -2,4 +2,7 @@ main
 .git
 .mygit
 test.txt
+test2.txt
+tst/
+tst2/
 .vscode/

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"mygit/internal/repo"
+	"mygit/internal/index"
 	"os"
 
 	flag "github.com/spf13/pflag"
@@ -29,7 +29,7 @@ func UpdateIndexCommand() {
 		
 		path := cmd.Arg(0)
 		
-		err := repo.UpdateIndexAdd(path)
+		err := index.UpdateIndexAdd(path)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
@@ -45,7 +45,7 @@ func UpdateIndexCommand() {
 
 		path := cmd.Arg(0)
 
-		err := repo.UpdateIndexRemove(path)
+		err := index.UpdateIndexRemove(path)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
@@ -54,7 +54,7 @@ func UpdateIndexCommand() {
 	}
 
 	if *cacheInfo != "" {
-		err := repo.UpdateIndexCacheInfo(*cacheInfo)
+		err := index.UpdateIndexCacheInfo(*cacheInfo)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
@@ -62,3 +62,4 @@ func UpdateIndexCommand() {
 	}
 	fmt.Println("usage: mygit update-index [--add|--remove|--cacheinfo]")
 }
+
