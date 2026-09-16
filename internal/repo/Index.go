@@ -1,9 +1,11 @@
 package repo
 
 import (
+	"errors"
 	"fmt"
 	"mygit/internal/index"
 	"mygit/internal/utils"
+	"os"
 	"strings"
 )
 
@@ -20,14 +22,7 @@ func UpdateIndexCacheInfo(cacheInfo string) error {
 		return err
 	}
 
-	indexContent, err := utils.ReadFile(".mygit/INDEX")
-	var indexEntries *index.Index
-	if err != nil {
-		// first time — index doesn't exist yet
-		indexEntries = &index.Index{}
-	} else {
-		indexEntries = index.UnpackIndex(indexContent)
-	}
+	indexEntries, err := ReadIndex()
 	if err != nil {
 		return err
 	}
@@ -58,7 +53,10 @@ func UpdateIndexAdd(path string) error {
 		return err
 	}
 
-	indexEntries := ReadIndex()
+	indexEntries, err := ReadIndex()
+	if err != nil {
+		return err
+	}
 	// indexEntries := index.UnpackIndex(indexContent)
 
 	// the entry
@@ -76,24 +74,23 @@ func UpdateIndexAdd(path string) error {
 	return Save(indexEntries)
 }
 
-func ReadIndex() *index.Index {
-	indexContent, err := utils.ReadFile(".mygit/INDEX")
-	var indexEntries *index.Index
-	if err != nil {
-		// first time — index doesn't exist yet
-		indexEntries = &index.Index{}
-	} else {
-		indexEntries = index.UnpackIndex(indexContent)
-	}
-	return indexEntries
-}
-func UpdateIndexRemove(path string) error {
+func ReadIndex() (*index.Index, error) {
 	indexContent, err := utils.ReadFile(".mygit/INDEX")
 	if err != nil {
-		return fmt.Errorf("index not found, nothing to remove")
+		if errors.Is(err, os.ErrNotExist) {
+			// first time — index doesn't exist yet
+			return &index.Index{}, nil
+		}
+		return nil, err
 	}
 
-	idx := index.UnpackIndex(indexContent)
+	return index.UnpackIndex(indexContent), nil
+}
+func UpdateIndexRemove(path string) error {
+	idx, err := ReadIndex()
+	if err != nil {
+		return err
+	}
 	idx.Remove(path)
 
 	return Save(idx)
