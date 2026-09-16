@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"path/filepath"
 )
 
@@ -20,10 +21,13 @@ func ObjectsDir() string {
 	return filepath.Join(RepoDir(), "objects")
 }
 
-func ObjectPath(hash string) string {
-	return filepath.Join(ObjectsDir(), hash[0:2], hash[2:])
+func ObjectPath(hash string) (string, error) {
+	if len(hash) < 2 {
+		return "", errors.New("not a repository")
+	}
+	return filepath.Join(ObjectsDir(), hash[0:2], hash[2:]), nil
 }
 
-func IndexPath()string{
+func IndexPath() string {
 	return "INDEX"
 }

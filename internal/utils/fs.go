@@ -12,7 +12,10 @@ func Exists(path string) bool {
 }
 
 func ObjectExists(hash string) bool {
-	objPath := ObjectPath(hash)
+	objPath, err := ObjectPath(hash)
+	if err != nil {
+		return false
+	}
 	return Exists(objPath)
 }
 

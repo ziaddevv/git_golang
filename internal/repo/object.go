@@ -65,7 +65,11 @@ func WriteObject(objType string, content []byte) (string, error) {
 	}
 
 	rawBytes, hash := HashObject(objType, content)
-	path := utils.ObjectPath(hash)
+	path, err := utils.ObjectPath(hash)
+
+	if err != nil {
+		return "", errors.New("object path is incorrect")
+	}
 
 	fmt.Println(path)
 	if utils.Exists(path) {
@@ -88,7 +92,7 @@ func WriteObject(objType string, content []byte) (string, error) {
 	fmt.Println("Original:", len(rawBytes))
 	fmt.Println("Compressed:", len(compressed))
 
-	err := utils.WWriteFileSafely(path, compressed)
+	err = utils.WWriteFileSafely(path, compressed)
 
 	if err != nil {
 		return "", err
@@ -121,7 +125,11 @@ func ReadObject(hash string) ([]byte, error) {
 		return nil, fmt.Errorf("invalid object id: %s", hash)
 	}
 
-	path := utils.ObjectPath(hash)
+	path, err := utils.ObjectPath(hash)
+
+	if err != nil {
+		return []byte{}, errors.New("object path is incorrect")
+	}
 
 	compressed, err := os.ReadFile(path)
 	if err != nil {
