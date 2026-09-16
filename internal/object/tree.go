@@ -35,6 +35,8 @@ func (t *Tree) Add(entry *TreeEntry) {
 }
 
 func BuildTree(idx *index.Index) *Tree {
+	// index here is just a list of entries which holds info about each tracked file
+	// tree is a list of entries which constructs the tree object , each entry holds--> mode path hash
 	tree := &Tree{
 		Entries: make([]*TreeEntry, 0, len(idx.Entries)),
 	}
@@ -75,13 +77,22 @@ type Trie struct {
 	Root *TrieNode
 }
 
-func (t *Trie) Insert(path []string, entry *TreeEntry) {
+func (t *Trie) Insert(path []string, entry *TreeEntry) error {
 	cur := t.Root
-	for _, str := range path {
+	for i, str := range path {
+		if str == "" || str == "." || str == ".." {
+			return fmt.Errorf("invalid tree path: %s", entry.Path)
+		}
+		if cur.IsFile {
+			return fmt.Errorf("file/directory conflict: %s", entry.Path)
+		}
 		if cur.Children[str] == nil {
 			cur.Children[str] = NewTrieNode()
 		}
 		cur = cur.Children[str]
+		if i == len(path)-1 && len(cur.Children) > 0 {
+			return fmt.Errorf("file/directory conflict: %s", entry.Path)
+		}
 	}
 	// fmt.Println(cur.Children)
 	cur.Entry = &TreeEntry{
@@ -90,6 +101,7 @@ func (t *Trie) Insert(path []string, entry *TreeEntry) {
 		Hash: entry.Hash,
 	}
 	cur.IsFile = true
+	return nil
 }
 
 func (t *Trie) ParseTreeObject(cur *TrieNode, fullPath string) (*TreeEntry, error) {
@@ -140,7 +152,7 @@ func (t *Trie) ParseTreeObject(cur *TrieNode, fullPath string) (*TreeEntry, erro
 	}
 
 	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Path < entries[j].Path
+		return treeSortName(entries[i]) < treeSortName(entries[j])
 	})
 
 	content := TreeContent(entries)
@@ -167,6 +179,13 @@ func (t *Trie) ParseTreeObject(cur *TrieNode, fullPath string) (*TreeEntry, erro
 
 }
 
+func treeSortName(entry *TreeEntry) string {
+	if entry.Mode == "40000" {
+		return entry.Path + "/"
+	}
+	return entry.Path
+}
+
 func TreeContent(entries []*TreeEntry) []byte {
 	var contentBuffer bytes.Buffer
 
@@ -187,7 +206,11 @@ func TreeContent(entries []*TreeEntry) []byte {
 strings.Split("/a//b", "/")
 */
 func BuildTreeObject() {
-	idx := repo.ReadIndex()
+	idx, err := repo.ReadIndex()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
 	tree := BuildTree(idx)
 
 	// Initialize the Root node here
@@ -197,7 +220,14 @@ func BuildTreeObject() {
 
 	for _, entry := range tree.Entries {
 		fmt.Printf("%s %s %s\n", entry.Mode, "a", entry.Path)
-		trie.Insert(strings.Split(entry.Path, "/"), entry)
+		if _, err := repo.ReadObject(fmt.Sprintf("%x", entry.Hash)); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+		if err := trie.Insert(strings.Split(entry.Path, "/"), entry); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
 	}
 	// trie.ParseTreeObject(trie.Root, "")
 	rootEntry, err := trie.ParseTreeObject(trie.Root, "")
@@ -211,6 +241,7 @@ func BuildTreeObject() {
 	PrintTrie(trie.Root, "")
 }
 
+// //////////////////////////////////////////////////////////////
 // ------------
 func PrintTrie(root *TrieNode, prefix string) {
 	printTrieHelper(root, prefix, "")

@@ -52,7 +52,7 @@ func CatFileCommand() {
 	case *pretty:
 		switch objType {
 		case "blob":
-			fmt.Print(string(content))
+			os.Stdout.Write(content)
 		case "tree":
 			// fmt.Print(string(content))
 			fmt.Print(repo.ParseTreeContent(content))
