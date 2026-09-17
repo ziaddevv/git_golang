@@ -15,7 +15,7 @@ flags
 -s ---> print size
 -p ----> if blob --> print content , else ---> print raw payload as text/bytes
 */
-func CatFileCommand() {
+func CatFileCommand() error {
 	catFileCmd := flag.NewFlagSet("cat-file", flag.ExitOnError)
 
 	typ := catFileCmd.BoolP("type", "t", false, "print type of the object")
@@ -25,21 +25,18 @@ func CatFileCommand() {
 	catFileCmd.Parse(os.Args[2:])
 
 	if catFileCmd.NArg() < 1 {
-		fmt.Println("usage: mygit cat-file [-t|-p|-s] <hash>")
-		return
+		return usageError("usage: mygit cat-file [-t|-p|-s] <hash>")
 	}
 
 	hash := catFileCmd.Arg(0)
 
 	data, err := object.ReadObject(hash)
 	if err != nil {
-		fmt.Println("error:", err)
-		return
+		return err
 	}
 	objType, content, err := object.ParseObject(data)
 	if err != nil {
-		fmt.Println("error:", err)
-		return
+		return err
 	}
 
 	switch {
@@ -67,6 +64,8 @@ func CatFileCommand() {
 		}
 
 	default:
-		fmt.Println("usage: mygit cat-file [-t|-p|-s] <hash>")
+		return usageError("usage: mygit cat-file [-t|-p|-s] <hash>")
 	}
+
+	return nil
 }
