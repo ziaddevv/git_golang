@@ -37,6 +37,8 @@ func Run() {
 		WriteTreeCommand()
 	case "commit-tree":
 		CommitTreeCommand()
+	case "update-ref":
+		UpdateRefCommand()
 	}
 }
 

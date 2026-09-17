@@ -85,7 +85,7 @@ func WriteObject(objType string, content []byte) (string, error) {
 	fmt.Println("Original:", len(rawBytes))
 	fmt.Println("Compressed:", len(compressed))
 
-	err = utils.WWriteFileSafely(path, compressed)
+	err = utils.WriteFileSafely(path, compressed)
 
 	if err != nil {
 		return "", err
