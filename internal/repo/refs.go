@@ -73,30 +73,25 @@ func AddRef(ref string, commitHash string) error {
 	return nil
 }
 
-func ResolveRef(ref string) (string, error) {
+func ResolveRef(ref string) (string, string, error) {
 	currentRef := ref
 
-	// Prevent infinite symbolic-ref loops.
 	const maxDepth = 10
 
 	for i := 0; i < maxDepth; i++ {
 		refPath := filepath.Join(utils.RepoDir(), currentRef)
 
-		// The final ref doesn't have to exist yet
-		//
+		// Final ref doesn't exist yet.
 		// Example:
-		//
 		// HEAD -> refs/heads/main
-		//
-		// If main doesn't exist yet, we still return
-		// "refs/heads/main" so AddRef can create it
+		// but refs/heads/main doesn't exist.
 		if !utils.Exists(refPath) {
-			return currentRef, nil
+			return currentRef, "", nil
 		}
 
 		data, err := utils.ReadFile(refPath)
 		if err != nil {
-			return "", fmt.Errorf(
+			return "", "", fmt.Errorf(
 				"failed to read ref %s: %w",
 				currentRef,
 				err,
@@ -106,13 +101,12 @@ func ResolveRef(ref string) (string, error) {
 		content := strings.TrimSpace(string(data))
 
 		// Symbolic ref:
-		//
 		// ref: refs/heads/main
 		if strings.HasPrefix(content, "ref: ") {
 			currentRef = strings.TrimPrefix(content, "ref: ")
 
 			if currentRef == "" {
-				return "", fmt.Errorf(
+				return "", "", fmt.Errorf(
 					"invalid symbolic ref %s",
 					ref,
 				)
@@ -121,11 +115,11 @@ func ResolveRef(ref string) (string, error) {
 			continue
 		}
 
-		// We reached a normal ref containing a hash.
-		return currentRef, nil
+		// Normal ref containing an object hash.
+		return currentRef, content, nil
 	}
 
-	return "", fmt.Errorf(
+	return "", "", fmt.Errorf(
 		"too many symbolic ref levels while resolving %s",
 		ref,
 	)
