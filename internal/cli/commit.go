@@ -1,21 +1,23 @@
 package cli
 
 import (
-	"fmt"
 	"mygit/internal/porcelain"
+	"os"
 
 	flag "github.com/spf13/pflag"
 )
 
 func CommitCommand() error {
 
-	cmd := flag.NewFlagSet("commit-tree", flag.ExitOnError)
+	cmd := flag.NewFlagSet("commit", flag.ExitOnError)
 
 	message := cmd.StringP("message", "m", "", "the commit message")
 
-	fmt.Println(message)
+	cmd.Parse(os.Args[2:])
 
-	err := porcelain.FullCommitObject(*message)
+	if *message == "" {
+		return usageError("usage: mygit commit -m <message>")
+	}
 
-	return err
+	return porcelain.FullCommitObject(*message)
 }
