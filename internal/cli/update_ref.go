@@ -10,7 +10,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func UpdateRefCommand() {
+func UpdateRefCommand() error {
 
 	/*
 		create or set a reference
@@ -35,45 +35,30 @@ func UpdateRefCommand() {
 	cmd.Parse(os.Args[2:])
 
 	if cmd.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "usage: mygit update-ref [-d] <ref> [<commit-hash>]")
-		os.Exit(1)
+		return usageError("usage: mygit update-ref [-d] <ref> [<commit-hash>]")
 	}
 
 	refPath := cmd.Arg(0)
 
 	if !isValidRefPath(refPath) {
-		fmt.Fprintf(os.Stderr, "fatal: invalid ref path: %s\n", refPath)
-		os.Exit(1)
+		return fmt.Errorf("invalid ref path: %s", refPath)
 	}
 
 	if *delete {
-		err := repo.RemoveRef(refPath)
-
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "fatal: %s\n", err)
-			os.Exit(1)
-		}
-		return
+		return repo.RemoveRef(refPath)
 	}
 
 	if cmd.NArg() < 2 {
-		fmt.Fprintln(os.Stderr, "usage: mygit update-ref <ref> <commit-hash>")
-		os.Exit(1)
+		return usageError("usage: mygit update-ref <ref> <commit-hash>")
 	}
 
 	commitHash := cmd.Arg(1)
 
 	if !object.IsValidObjectID(commitHash) {
-		fmt.Fprintf(os.Stderr, "fatal: not a valid object name: %s\n", commitHash)
-		os.Exit(1)
+		return fmt.Errorf("not a valid object name: %s", commitHash)
 	}
 
-	err := repo.AddRef(refPath, commitHash)
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "fatal: %s\n", err)
-		return
-	}
+	return repo.AddRef(refPath, commitHash)
 }
 
 func isValidRefPath(ref string) bool {
