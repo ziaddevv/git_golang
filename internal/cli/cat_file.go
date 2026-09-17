@@ -57,7 +57,7 @@ func CatFileCommand() {
 			// fmt.Print(string(content))
 			fmt.Print(object.ParseTreeContent(content))
 		case "commit":
-			fmt.Print(content)
+			os.Stdout.Write(content)
 
 		case "tag":
 			fmt.Print(content)
