@@ -9,7 +9,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-func CommitObject(treeHash string, commitMessage string, parentHashes []string) error {
+func CommitObject(treeHash string, commitMessage string, parentHashes []string) (string, error) {
 
 	// construct content
 	/*
@@ -24,33 +24,33 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 	// validate the tree hash exists and is actually a tree
 	treeData, err := ReadObject(treeHash)
 	if err != nil {
-		return fmt.Errorf("invalid tree object %s: %w", treeHash, err)
+		return "", fmt.Errorf("invalid tree object %s: %w", treeHash, err)
 	}
 
 	objType, _, err := ParseObject(treeData)
 	if err != nil {
-		return fmt.Errorf("corrupted tree object %s: %w", treeHash, err)
+		return "", fmt.Errorf("corrupted tree object %s: %w", treeHash, err)
 	}
 
 	if objType != "tree" {
-		return fmt.Errorf("object %s is a %s, not a tree", treeHash, objType)
+		return "", fmt.Errorf("object %s is a %s, not a tree", treeHash, objType)
 	}
 
 	// validate parent commits exist and are actually commits
 	for _, parentHash := range parentHashes {
 		parentData, err := ReadObject(parentHash)
 		if err != nil {
-			return fmt.Errorf("invalid parent commit %s: %w", parentHash, err)
+			return "", fmt.Errorf("invalid parent commit %s: %w", parentHash, err)
 		}
 
 		parentType, _, err := ParseObject(parentData)
 
 		if err != nil {
-			return fmt.Errorf("corrupted parent object %s: %w", parentHash, err)
+			return "", fmt.Errorf("corrupted parent object %s: %w", parentHash, err)
 		}
 
 		if parentType != "commit" {
-			return fmt.Errorf("object %s is a %s, not a commit", parentHash, parentType)
+			return "", fmt.Errorf("object %s is a %s, not a commit", parentHash, parentType)
 		}
 	}
 
@@ -69,14 +69,14 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 	// read from config file
 	cfg, err := ini.Load(".mygit/config")
 	if err != nil {
-		return fmt.Errorf("failed to load .mygit/config: %w", err)
+		return "", fmt.Errorf("failed to load .mygit/config: %w", err)
 	}
 
 	name := cfg.Section("user").Key("name").String()
 	email := cfg.Section("user").Key("email").String()
 
 	if name == "" || email == "" {
-		return fmt.Errorf("user.name and user.email must be set in .mygit/config")
+		return "", fmt.Errorf("user.name and user.email must be set in .mygit/config")
 	}
 
 	now := time.Now()
@@ -96,11 +96,11 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 	hash, err := WriteObject("commit", buf.Bytes())
 
 	if err != nil {
-		return fmt.Errorf("failed to write commit object: %w", err)
+		return "", fmt.Errorf("failed to write commit object: %w", err)
 	}
 	fmt.Println(hash)
 
-	return nil
+	return hash, nil
 }
 
 func writeIdentity(buf *bytes.Buffer, role, name, email, timestamp, timezone string) {

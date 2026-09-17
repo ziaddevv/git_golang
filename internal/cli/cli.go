@@ -43,6 +43,8 @@ func Run() {
 		err = CommitTreeCommand()
 	case "update-ref":
 		err = UpdateRefCommand()
+	case "commit":
+		err = CommitCommand()
 	default:
 		fmt.Fprintf(os.Stderr, "mygit: '%s' is not a mygit command\n", os.Args[1])
 		return

@@ -13,7 +13,7 @@ import (
 func WriteTreeCommand() error {
 	// get the entries from index file
 	//create a tree object
-	err := tree.BuildTreeObject()
+	_, err := tree.BuildTreeObject()
 	if err != nil {
 		return fmt.Errorf("write-tree: %w", err)
 	}

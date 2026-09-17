@@ -44,7 +44,7 @@ func AddRef(ref string, commitHash string) error {
 		HEAD:
 		ref: refs/heads/main
 	*/
-	finalRef, err := ResolveRef(ref)
+	finalRef, _, err := ResolveRef(ref)
 	if err != nil {
 		return err
 	}
@@ -81,10 +81,6 @@ func ResolveRef(ref string) (string, string, error) {
 	for i := 0; i < maxDepth; i++ {
 		refPath := filepath.Join(utils.RepoDir(), currentRef)
 
-		// Final ref doesn't exist yet.
-		// Example:
-		// HEAD -> refs/heads/main
-		// but refs/heads/main doesn't exist.
 		if !utils.Exists(refPath) {
 			return currentRef, "", nil
 		}

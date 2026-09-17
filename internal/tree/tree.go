@@ -182,10 +182,10 @@ func TreeContent(entries []*TreeEntry) []byte {
 /*
 strings.Split("/a//b", "/")
 */
-func BuildTreeObject() error {
+func BuildTreeObject() (string, error) {
 	idx, err := index.ReadIndex()
 	if err != nil {
-		return err
+		return "", err
 	}
 	tree := BuildTree(idx)
 
@@ -197,22 +197,23 @@ func BuildTreeObject() error {
 	for _, entry := range tree.Entries {
 		fmt.Printf("%s %s %s\n", entry.Mode, "a", entry.Path)
 		if _, err := object.ReadObject(fmt.Sprintf("%x", entry.Hash)); err != nil {
-			return err
+			return "", err
 		}
 		if err := trie.Insert(strings.Split(entry.Path, "/"), entry); err != nil {
-			return err
+			return "", err
 		}
 	}
 	// trie.ParseTreeObject(trie.Root, "")
 	rootEntry, err := trie.ParseTreeObject(trie.Root, "")
 	if err != nil {
-		return err
+		return "", err
 	}
-	fmt.Printf("%x\n", rootEntry.Hash)
+	fmt.Printf("that's the hash %x\n", rootEntry.Hash)
 
 	fmt.Println("-------------------")
 	PrintTrie(trie.Root, "")
-	return nil
+	hashString := fmt.Sprintf("%x", rootEntry.Hash)
+	return hashString, nil
 }
 
 // //////////////////////////////////////////////////////////////

@@ -38,6 +38,7 @@ func CommitTreeCommand() error {
 			return fmt.Errorf("not a valid parent hash: %s", p)
 		}
 	}
+	_, err := object.CommitObject(treeHash, *message, *parentHashes)
 
-	return object.CommitObject(treeHash, *message, *parentHashes)
+	return err
 }
