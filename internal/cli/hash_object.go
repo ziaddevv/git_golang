@@ -14,7 +14,7 @@ import (
 // validate command structure and flags
 // what type os objects? -t flag ,
 
-func HashObjectCommand() {
+func HashObjectCommand() error {
 	cmd := flag.NewFlagSet("hash-object", flag.ExitOnError)
 
 	write := cmd.BoolP("write", "w", false, "write object into database")
@@ -23,16 +23,8 @@ func HashObjectCommand() {
 
 	cmd.Parse(os.Args[2:])
 
-	valid := map[string]bool{
-		"blob":   true,
-		"tree":   true,
-		"commit": true,
-		"tag":    true,
-	}
-
-	if !valid[*objType] {
-		fmt.Fprintf(os.Stderr, "invalid object type: %s\n", *objType)
-		os.Exit(1)
+	if !object.IsValidObjectType(*objType) {
+		return usageError(fmt.Sprintf("invalid object type: %s", *objType))
 	}
 
 	var data []byte
@@ -42,8 +34,7 @@ func HashObjectCommand() {
 		data, err = io.ReadAll(os.Stdin)
 	} else {
 		if cmd.NArg() < 1 {
-			fmt.Fprintln(os.Stderr, "missing file operand")
-			os.Exit(1)
+			return usageError("missing file operand")
 		}
 
 		fileName := cmd.Arg(0)
@@ -51,8 +42,7 @@ func HashObjectCommand() {
 	}
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 
 	var hash string
@@ -61,17 +51,12 @@ func HashObjectCommand() {
 		fmt.Println("writing ", data)
 		hash, err = object.WriteObject(*objType, data)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			return err
 		}
 	} else {
 		_, hash = object.HashObject(*objType, data)
 	}
 
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
 	fmt.Println(hash)
+	return nil
 }

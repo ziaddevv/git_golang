@@ -7,22 +7,20 @@ import (
 	"os"
 )
 
-func InitCommand() {
+func InitCommand() error {
 	if len(os.Args) > 3 {
-		fmt.Println("init takes mx  2 arguments")
-		return
+		return usageError("init takes max 2 arguments")
 	}
 
 	if utils.Exists(".mygit") {
-		fmt.Println("repo already exists")
-		return
+		return fmt.Errorf("repo already exists")
 	}
 
 	err := repo.Init()
 	if err != nil {
-		fmt.Println("error:", err)
-		return
+		return fmt.Errorf("init: %w", err)
 	}
 
 	fmt.Println("Repository initialized")
+	return nil
 }
