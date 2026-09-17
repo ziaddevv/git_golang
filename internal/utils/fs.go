@@ -41,7 +41,7 @@ func CreateEmptyFile(path string) error {
 func WriteFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0644)
 }
-func WWriteFileSafely(path string, data []byte) error { // same as write to fie but it checks the folder existing and creating it if not
+func WriteFileSafely(path string, data []byte) error { // same as write to fie but it checks the folder existing and creating it if not
 	folderPath := filepath.Dir(path)
 
 	err := os.MkdirAll(folderPath, 0755)
@@ -73,4 +73,20 @@ func AppendFile(path string, data []byte) error {
 
 func ReadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
+}
+
+func RemoveFile(path string) error {
+
+	err := os.Remove(path)
+
+	if err != nil {
+		// This will trigger if the file doesn't exist,
+		// or if you lack permissions to delete it.
+		return err
+	}
+	return nil
+}
+
+func EnsureDir(path string) error {
+	return os.MkdirAll(path, 0755)
 }
