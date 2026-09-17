@@ -2,7 +2,6 @@ package object
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -22,20 +21,39 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 		<commit message>
 	*/
 
-	//validate the tree hash exists?
-	_, err := ReadObject(treeHash)
-
+	// validate the tree hash exists and is actually a tree
+	treeData, err := ReadObject(treeHash)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid tree object %s: %w", treeHash, err)
 	}
-	// validate parents commits exists
+
+	objType, _, err := ParseObject(treeData)
+	if err != nil {
+		return fmt.Errorf("corrupted tree object %s: %w", treeHash, err)
+	}
+
+	if objType != "tree" {
+		return fmt.Errorf("object %s is a %s, not a tree", treeHash, objType)
+	}
+
+	// validate parent commits exist and are actually commits
 	for _, parentHash := range parentHashes {
-		_, err := ReadObject(parentHash)
+		parentData, err := ReadObject(parentHash)
 		if err != nil {
-			return err
+			return fmt.Errorf("invalid parent commit %s: %w", parentHash, err)
+		}
+
+		parentType, _, err := ParseObject(parentData)
+
+		if err != nil {
+			return fmt.Errorf("corrupted parent object %s: %w", parentHash, err)
+		}
+
+		if parentType != "commit" {
+			return fmt.Errorf("object %s is a %s, not a commit", parentHash, parentType)
 		}
 	}
-	// aappends to
+
 	var buf bytes.Buffer
 
 	buf.WriteString("tree ")
@@ -50,47 +68,27 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 
 	// read from config file
 	cfg, err := ini.Load(".mygit/config")
-
 	if err != nil {
-		return errors.New("failed to find Configuration file")
+		return fmt.Errorf("failed to load .mygit/config: %w", err)
 	}
 
 	name := cfg.Section("user").Key("name").String()
 	email := cfg.Section("user").Key("email").String()
+
+	if name == "" || email == "" {
+		return fmt.Errorf("user.name and user.email must be set in .mygit/config")
+	}
+
 	now := time.Now()
-	// timestampStr := strconv.FormatInt(now.Unix(), 10)
+	timestamp := strconv.FormatInt(now.Unix(), 10)
+	timezone := now.Format("-0700")
 
 	fmt.Println(name, email)
 
-	buf.WriteString("author ")
-	buf.WriteString(name)
-	buf.WriteString(" ")
-	buf.WriteString("<")
-	buf.WriteString(email)
-	buf.WriteString(">")
-	buf.WriteString(" ")
-	buf.WriteString(strconv.FormatInt(now.Unix(), 10))
+	writeIdentity(&buf, "author", name, email, timestamp, timezone)
+	writeIdentity(&buf, "committer", name, email, timestamp, timezone)
 
-	buf.WriteString(" ")
-
-	buf.WriteString(now.Format("-0700"))
 	buf.WriteByte('\n')
-
-	buf.WriteString("committer ")
-	buf.WriteString(name)
-	buf.WriteString(" ")
-	buf.WriteString("<")
-	buf.WriteString(email)
-	buf.WriteString(">")
-	buf.WriteString(" ")
-	buf.WriteString(strconv.FormatInt(now.Unix(), 10))
-
-	buf.WriteString(" ")
-
-	buf.WriteString(now.Format("-0700"))
-	buf.WriteByte('\n')
-	buf.WriteByte('\n')
-
 	buf.WriteString(commitMessage)
 	buf.WriteByte('\n')
 
@@ -98,9 +96,22 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 	hash, err := WriteObject("commit", buf.Bytes())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write commit object: %w", err)
 	}
 	fmt.Println(hash)
 
 	return nil
+}
+
+func writeIdentity(buf *bytes.Buffer, role, name, email, timestamp, timezone string) {
+	buf.WriteString(role)
+	buf.WriteString(" ")
+	buf.WriteString(name)
+	buf.WriteString(" <")
+	buf.WriteString(email)
+	buf.WriteString("> ")
+	buf.WriteString(timestamp)
+	buf.WriteString(" ")
+	buf.WriteString(timezone)
+	buf.WriteByte('\n')
 }
