@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mygit/internal/index"
 	"mygit/internal/object"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -183,11 +182,10 @@ func TreeContent(entries []*TreeEntry) []byte {
 /*
 strings.Split("/a//b", "/")
 */
-func BuildTreeObject() {
+func BuildTreeObject() error {
 	idx, err := index.ReadIndex()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+		return err
 	}
 	tree := BuildTree(idx)
 
@@ -199,24 +197,22 @@ func BuildTreeObject() {
 	for _, entry := range tree.Entries {
 		fmt.Printf("%s %s %s\n", entry.Mode, "a", entry.Path)
 		if _, err := object.ReadObject(fmt.Sprintf("%x", entry.Hash)); err != nil {
-			fmt.Fprintln(os.Stderr, "error:", err)
-			os.Exit(1)
+			return err
 		}
 		if err := trie.Insert(strings.Split(entry.Path, "/"), entry); err != nil {
-			fmt.Fprintln(os.Stderr, "error:", err)
-			os.Exit(1)
+			return err
 		}
 	}
 	// trie.ParseTreeObject(trie.Root, "")
 	rootEntry, err := trie.ParseTreeObject(trie.Root, "")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+		return err
 	}
 	fmt.Printf("%x\n", rootEntry.Hash)
 
 	fmt.Println("-------------------")
 	PrintTrie(trie.Root, "")
+	return nil
 }
 
 // //////////////////////////////////////////////////////////////
