@@ -4,10 +4,98 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/ini.v1"
 )
+
+type Commit struct {
+	Hash          string
+	TreeHash      string
+	ParentCommits []string
+	Author        string
+	Commiter      string
+	Date          int64
+	Message       string
+}
+
+func NewCommit(hash, treeHash, author, commiter string, date int64, message string, parents []string) *Commit {
+	return &Commit{
+		Hash:          hash,
+		TreeHash:      treeHash,
+		Author:        author,
+		Commiter:      commiter,
+		Date:          date,
+		Message:       message,
+		ParentCommits: parents,
+	}
+}
+
+func GetCommitbyHash(commitHash string) (*Commit, error) {
+	fileContent, err := content(commitHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseCommit(commitHash, fileContent)
+}
+
+// Added hash parameter
+func ParseCommit(hash string, content []byte) (*Commit, error) {
+	lines := strings.Split(string(content), "\n")
+
+	commit := &Commit{
+		Hash:          hash,
+		ParentCommits: []string{},
+	}
+
+	inMessage := false
+	var messageBuilder strings.Builder
+
+	for _, line := range lines {
+		if inMessage {
+			messageBuilder.WriteString(line + "\n")
+			continue
+		}
+
+		if line == "" {
+			inMessage = true
+			continue
+		}
+
+		if strings.HasPrefix(line, "tree ") {
+			commit.TreeHash = strings.TrimPrefix(line, "tree ")
+
+		} else if strings.HasPrefix(line, "parent ") {
+			commit.ParentCommits = append(commit.ParentCommits, strings.TrimPrefix(line, "parent "))
+
+		} else if strings.HasPrefix(line, "author ") {
+			authorLine := strings.TrimPrefix(line, "author ")
+
+			fields := strings.Fields(authorLine)
+			if len(fields) >= 2 {
+				timestampStr := fields[len(fields)-2]
+				if parsedTime, err := strconv.ParseInt(timestampStr, 10, 64); err == nil {
+					commit.Date = parsedTime
+				}
+				commit.Author = strings.Join(fields[:len(fields)-2], " ")
+			}
+
+		} else if strings.HasPrefix(line, "committer ") {
+			committerLine := strings.TrimPrefix(line, "committer ")
+
+			fields := strings.Fields(committerLine)
+			if len(fields) >= 2 {
+				commit.Commiter = strings.Join(fields[:len(fields)-2], " ")
+			}
+		}
+	}
+
+	commit.Message = strings.TrimSpace(messageBuilder.String())
+
+	return commit, nil
+}
 
 func CommitObject(treeHash string, commitMessage string, parentHashes []string) (string, error) {
 
