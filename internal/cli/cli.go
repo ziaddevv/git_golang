@@ -45,6 +45,8 @@ func Run() {
 		err = UpdateRefCommand()
 	case "commit":
 		err = CommitCommand()
+	case "log":
+		err = LogCommand()
 	default:
 		fmt.Fprintf(os.Stderr, "mygit: '%s' is not a mygit command\n", os.Args[1])
 		return
