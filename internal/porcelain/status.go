@@ -5,6 +5,7 @@ import (
 	"mygit/internal/index"
 	"mygit/internal/object"
 	"mygit/internal/repo"
+	"mygit/internal/utils"
 	"mygit/internal/worktree"
 	"path/filepath"
 )
@@ -27,6 +28,14 @@ type Change struct {
 	Path string
 	Type ChangeType
 }
+
+// just for colors
+const (
+	Green  = "\033[32m"
+	Red    = "\033[31m"
+	Yellow = "\033[33m"
+	Reset  = "\033[0m"
+)
 
 func Status() error {
 	/*
@@ -101,19 +110,23 @@ func Status() error {
 
 	return nil
 }
+
 func PrintStagedChanges(changes []Change) {
 	fmt.Println("Changes to be committed:")
 
 	for _, change := range changes {
 		switch change.Type {
 		case Added:
-			fmt.Printf("  new file: %s\n", change.Path)
+			fmt.Printf("  %snew file: %s%s\n",
+				utils.Green, change.Path, utils.Reset)
 
 		case Modified:
-			fmt.Printf("  modified: %s\n", change.Path)
+			fmt.Printf("  %smodified: %s%s\n",
+				utils.Green, change.Path, utils.Reset)
 
 		case Deleted:
-			fmt.Printf("  deleted: %s\n", change.Path)
+			fmt.Printf("  %sdeleted: %s%s\n",
+				utils.Green, change.Path, utils.Reset)
 		}
 	}
 }
@@ -124,10 +137,12 @@ func PrintUnstagedChanges(changes []Change) {
 	for _, change := range changes {
 		switch change.Type {
 		case Modified:
-			fmt.Printf("  modified: %s\n", change.Path)
+			fmt.Printf("  %smodified: %s%s\n",
+				utils.Red, change.Path, utils.Reset)
 
 		case Deleted:
-			fmt.Printf("  deleted: %s\n", change.Path)
+			fmt.Printf("  %sdeleted: %s%s\n",
+				utils.Red, change.Path, utils.Reset)
 		}
 	}
 }
@@ -137,7 +152,8 @@ func PrintUntrackedFiles(changes []Change) {
 
 	for _, change := range changes {
 		if change.Type == Added {
-			fmt.Printf("  %s\n", change.Path)
+			fmt.Printf("  %s%s%s\n",
+				utils.Red, change.Path, utils.Reset)
 		}
 	}
 }
