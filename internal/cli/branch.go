@@ -45,6 +45,7 @@ func BranchCommand() error {
 		return porcelain.ListBranchesVerbose()
 
 	case *all:
+		//todo when we have more refs  folders like remote
 		// return porcelain.ListAllBranches()
 
 	default:
