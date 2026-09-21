@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 )
 
@@ -15,6 +16,9 @@ import (
 
 func RepoDir() string {
 	return ".mygit"
+}
+func WorkDir() (string, error) {
+	return os.Getwd()
 }
 
 func ObjectsDir() string {

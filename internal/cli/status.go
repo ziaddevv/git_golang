@@ -7,10 +7,11 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func StatusCommand() {
+func StatusCommand() error {
 	cmd := flag.NewFlagSet("status", flag.ExitOnError)
 
 	cmd.Parse(os.Args[2:])
 
 	porcelain.Status()
+	return nil
 }
