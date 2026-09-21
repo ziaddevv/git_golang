@@ -3,6 +3,7 @@ package object
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -59,4 +60,34 @@ func ReadTreeEntry(r *bufio.Reader) (TreeParsedEntry, error) {
 	}
 
 	return e, nil
+}
+func ReadTreeEntries(treeHash string) ([]TreeParsedEntry, error) {
+	data, err := ReadObject(treeHash)
+	if err != nil {
+		return nil, err
+	}
+
+	objType, content, err := ParseObject(data)
+	if err != nil {
+		return nil, err
+	}
+	if objType != "tree" {
+		return nil, fmt.Errorf("object %s is a %s, not a tree", treeHash, objType)
+	}
+
+	r := bufio.NewReader(bytes.NewReader(content))
+	var entries []TreeParsedEntry
+
+	for {
+		entry, err := ReadTreeEntry(r)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			break
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries, nil
 }
