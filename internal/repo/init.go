@@ -93,6 +93,16 @@ func Init() error {
 		return err
 	}
 
+	configFile := filepath.Join(path, "config")
+	defaultConfig := `[user]
+	name = Ziad Ibrahim
+	email = zyyyad1990@example.com
+`
+	err = utils.WriteFile(configFile, []byte(defaultConfig))
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
-
