@@ -35,3 +35,11 @@ func ObjectPath(hash string) (string, error) {
 func IndexPath() string {
 	return "INDEX"
 }
+
+func RefsDir() string {
+	return ".mygit/refs/heads"
+}
+
+func HeadPath() string {
+	return ".mygit/HEAD"
+}

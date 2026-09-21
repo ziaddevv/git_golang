@@ -49,6 +49,8 @@ func Run() {
 		err = LogCommand()
 	case "status":
 		err = StatusCommand()
+	case "branch":
+		err = BranchCommand()
 	default:
 		fmt.Fprintf(os.Stderr, "mygit: '%s' is not a mygit command\n", os.Args[1])
 		return

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mygit/internal/object"
 	"mygit/internal/utils"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -119,4 +120,35 @@ func ResolveRef(ref string) (string, string, error) {
 		"too many symbolic ref levels while resolving %s",
 		ref,
 	)
+}
+
+func ListBranches() ([]string, error) {
+	entries, err := os.ReadDir(utils.RefsDir())
+	if err != nil {
+		return nil, err
+	}
+
+	var branches []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			branches = append(branches, e.Name())
+		}
+	}
+
+	return branches, nil
+}
+
+func GetCurrentBranch(headPath string) (string, error) {
+	content, err := os.ReadFile(headPath)
+	if err != nil {
+		return "", err
+	}
+
+	head := strings.TrimSpace(string(content))
+
+	if strings.HasPrefix(head, "ref: refs/heads/") {
+		return strings.TrimPrefix(head, "ref: refs/heads/"), nil
+	}
+
+	return head, nil
 }
