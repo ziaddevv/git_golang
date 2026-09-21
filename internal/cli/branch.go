@@ -36,16 +36,13 @@ func BranchCommand() error {
 		return porcelain.DeleteBranch(args)
 
 	case *forceDelete:
-		// return porcelain.ForceDeleteBranch(args)
+		return porcelain.ForceDeleteBranch(args)
 
 	case *moveBranch:
-		// return porcelain.RenameBranch(args)
-
-	case *forceMove:
-		// return porcelain.ForceRenameBranch(args)
+		return porcelain.RenameBranch(args)
 
 	case *verbose:
-		// return porcelain.ListBranchesVerbose()
+		return porcelain.ListBranchesVerbose()
 
 	case *all:
 		// return porcelain.ListAllBranches()
