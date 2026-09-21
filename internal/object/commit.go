@@ -3,6 +3,8 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"mygit/internal/utils"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -155,7 +157,7 @@ func CommitObject(treeHash string, commitMessage string, parentHashes []string) 
 	}
 
 	// read from config file
-	cfg, err := ini.Load(".mygit/config")
+	cfg, err := ini.Load(filepath.Join(utils.RepoDir(), "config"))
 	if err != nil {
 		return "", fmt.Errorf("failed to load .mygit/config: %w", err)
 	}
