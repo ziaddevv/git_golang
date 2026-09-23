@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mygit/internal/index"
 	"mygit/internal/object"
+	"mygit/internal/repo"
 	"mygit/internal/utils"
 	"mygit/internal/worktree"
 	"sort"
@@ -244,9 +245,62 @@ func Diff() error {
 	return CompareFiles(modifiedFiles)
 }
 
-func StagedDiff() error {
+func DiffStaged() error {
+	idx, err := index.ReadIndex()
+	if err != nil {
+		return err
+	}
 
-	return nil
+	indexMap := ParseIndex(idx)
+
+	_, commitHash, err := repo.ResolveRef("HEAD")
+	if err != nil {
+		return err
+	}
+
+	headMap := make(Snapshot)
+
+	if commitHash != "" {
+		lastCommit, err := object.GetCommitbyHash(commitHash)
+		if err != nil {
+			return err
+		}
+
+		treeEntries, err := object.ReadTreeEntries(lastCommit.TreeHash)
+		if err != nil {
+			return err
+		}
+
+		err = ParseTreeObject(treeEntries, "", headMap)
+		if err != nil {
+			return err
+		}
+	}
+
+	stagedChanges := Compare(headMap, indexMap)
+
+	var stagedFiles []FileDiff
+
+	for _, v := range stagedChanges {
+		if v.Type == Modified ||
+			v.Type == Added ||
+			v.Type == Deleted {
+
+			newDiff := &FileDiff{
+				Path:    v.Path,
+				OldHash: headMap[v.Path],
+				NewHash: indexMap[v.Path],
+			}
+
+			stagedFiles = append(stagedFiles, *newDiff)
+		}
+	}
+
+	sort.Slice(stagedFiles, func(i, j int) bool {
+		return stagedFiles[i].Path < stagedFiles[j].Path
+	})
+
+	return CompareFiles(stagedFiles)
 }
 
 func CompareFiles(ModifiedFiles []FileDiff) error {

@@ -14,7 +14,10 @@ func DiffCommand() error {
 	cmd.Parse(os.Args[2:])
 
 	if *staged {
-		porcelain.StagedDiff()
+		err := porcelain.DiffStaged()
+		if err != nil {
+			return err
+		}
 	} else {
 
 		err := porcelain.Diff()
