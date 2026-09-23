@@ -565,7 +565,7 @@ func FormatHunk(hunk Hunk) []string {
 		newRange,
 	)
 
-	result = append(result, header)
+	result = append(result, utils.Cyan+header+utils.Reset)
 
 	for _, op := range hunk.Operations {
 		switch op.Type {
@@ -574,10 +574,16 @@ func FormatHunk(hunk Hunk) []string {
 			result = append(result, " "+op.OldLine)
 
 		case Delete:
-			result = append(result, "-"+op.OldLine)
+			result = append(
+				result,
+				utils.Red+"-"+op.OldLine+utils.Reset,
+			)
 
 		case Insert:
-			result = append(result, "+"+op.NewLine)
+			result = append(
+				result,
+				utils.Green+"+"+op.NewLine+utils.Reset,
+			)
 		}
 	}
 
