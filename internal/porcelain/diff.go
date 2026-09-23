@@ -266,12 +266,10 @@ func CompareFiles(ModifiedFiles []FileDiff) error {
 
 		hunks := BuildHunks(operations, 3)
 
-		for _, hunk := range hunks {
-			lines := FormatHunk(hunk)
+		lines := FormatFileDiff(file, hunks)
 
-			for _, line := range lines {
-				fmt.Println(line)
-			}
+		for _, line := range lines {
+			fmt.Println(line)
 		}
 	}
 	return nil
@@ -546,4 +544,20 @@ func SplitLines(content []byte) []string {
 	}
 
 	return lines
+}
+
+func FormatFileDiff(file FileDiff, hunks []Hunk) []string {
+	var result []string
+
+	result = append(result,
+		fmt.Sprintf("diff --git a/%s b/%s", file.Path, file.Path),
+		fmt.Sprintf("--- a/%s", file.Path),
+		fmt.Sprintf("+++ b/%s", file.Path),
+	)
+
+	for _, hunk := range hunks {
+		result = append(result, FormatHunk(hunk)...)
+	}
+
+	return result
 }
