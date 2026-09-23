@@ -230,24 +230,13 @@ func Diff() error {
 		return result
 	}
 
-	ModifiedFiles := filter()
+	modifiedFiles := filter()
 
-	_ = ModifiedFiles
+	_ = modifiedFiles
 
 	// fmt.Println(ModifiedFiles)
 
-	fmt.Println()
-	// err = CompareFiles(ModifiedFiles)
-	A := []string{"A", "B", "C", "D"}
-	B := []string{"A", "C", "D", "E"}
-	FindShortestEditScript := NewMyers(A, B)
-	FindShortestEditScript.FindShortestEditScript()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return CompareFiles(modifiedFiles)
 }
 
 func StagedDiff() error {
@@ -269,20 +258,36 @@ func CompareFiles(ModifiedFiles []FileDiff) error {
 			return fmt.Errorf("Fatal: Couldn't fetch files")
 		}
 
-		oldLines := strings.Split(string(fileContentA), "\n")
-		newLines := strings.Split(string(fileContentB), "\n")
-		fmt.Println()
-		fmt.Println()
-		fmt.Println()
+		oldLines := strings.Split(strings.TrimSuffix(string(fileContentA), "\n"), "\n")
+		newLines := strings.Split(strings.TrimSuffix(string(fileContentB), "\n"), "\n")
+		myers := NewMyers(oldLines, newLines)
 
-		fmt.Println(oldLines)
-		fmt.Println()
-		fmt.Println(newLines)
+		operations := myers.FindShortestEditScript()
 
+		diffLines := FormatOperations(operations)
+
+		for _, line := range diffLines {
+			fmt.Println(line)
+		}
 	}
 	return nil
 }
 
-func FindFileDiff(fileContentA []byte, fileContentB []byte) {
+func FormatOperations(operations []Operation) []string {
+	var result []string
 
+	for _, op := range operations {
+		switch op.Type {
+		case Equal:
+			result = append(result, " "+op.OldLine)
+
+		case Delete:
+			result = append(result, "-"+op.OldLine)
+
+		case Insert:
+			result = append(result, "+"+op.NewLine)
+		}
+	}
+
+	return result
 }
