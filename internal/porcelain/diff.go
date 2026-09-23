@@ -264,10 +264,14 @@ func CompareFiles(ModifiedFiles []FileDiff) error {
 
 		operations := myers.FindShortestEditScript()
 
-		diffLines := FormatOperations(operations)
+		hunks := BuildHunks(operations, 3)
 
-		for _, line := range diffLines {
-			fmt.Println(line)
+		for _, hunk := range hunks {
+			lines := FormatHunk(hunk)
+
+			for _, line := range lines {
+				fmt.Println(line)
+			}
 		}
 	}
 	return nil
@@ -308,6 +312,177 @@ func FormatOperations(operations []Operation) []string {
 	)
 
 	result = append([]string{header}, result...)
+
+	return result
+}
+
+func CalculateHunkRange(hunk *Hunk) {
+	oldStart := 1
+	newStart := 1
+
+	for _, op := range hunk.Operations {
+		switch op.Type {
+		case Equal:
+			oldStart++
+			newStart++
+
+		case Delete:
+			oldStart++
+
+		case Insert:
+			newStart++
+		}
+	}
+
+	hunk.OldStart = 1
+	hunk.NewStart = 1
+	hunk.OldCount = oldStart - 1
+	hunk.NewCount = newStart - 1
+}
+
+type Hunk struct {
+	Operations []Operation
+
+	OldStart int
+	OldCount int
+
+	NewStart int
+	NewCount int
+}
+
+type operationRange struct {
+	start int
+	end   int
+}
+
+func BuildHunks(operations []Operation, context int) []Hunk {
+	var ranges []operationRange
+
+	// find  range around every changed operation.
+
+	for i, op := range operations {
+		if op.Type == Equal {
+			continue
+		}
+
+		start := i - context
+		if start < 0 {
+			start = 0
+		}
+
+		end := i + context + 1
+		if end > len(operations) {
+			end = len(operations)
+		}
+
+		ranges = append(ranges, operationRange{
+			start: start,
+			end:   end,
+		})
+	}
+
+	if len(ranges) == 0 {
+		return nil
+	}
+
+	//// there is a case where we have overlapping group of changes so it is bettter to merge them
+
+	var merged []operationRange
+
+	for _, current := range ranges {
+		if len(merged) == 0 {
+			merged = append(merged, current)
+			continue
+		}
+
+		last := &merged[len(merged)-1]
+
+		if current.start <= last.end {
+			if current.end > last.end {
+				last.end = current.end
+			}
+		} else {
+			merged = append(merged, current)
+		}
+	}
+
+	// convert back the ranges to hunks
+
+	var hunks []Hunk
+
+	for _, r := range merged {
+		hunk := Hunk{
+			Operations: operations[r.start:r.end],
+		}
+
+		oldLine := 1
+		newLine := 1
+
+		for i := 0; i < r.start; i++ {
+			switch operations[i].Type {
+
+			case Equal:
+				oldLine++
+				newLine++
+
+			case Delete:
+				oldLine++
+
+			case Insert:
+				newLine++
+			}
+		}
+
+		hunk.OldStart = oldLine
+		hunk.NewStart = newLine
+
+		for _, op := range hunk.Operations {
+			switch op.Type {
+
+			case Equal:
+				hunk.OldCount++
+				hunk.NewCount++
+
+			case Delete:
+				hunk.OldCount++
+
+			case Insert:
+				hunk.NewCount++
+			}
+		}
+
+		hunks = append(hunks, hunk)
+	}
+
+	return hunks
+}
+
+func FormatHunk(hunk Hunk) []string {
+	var result []string
+
+	header := fmt.Sprintf(
+		"@@ -%d,%d +%d,%d @@",
+		hunk.OldStart,
+		hunk.OldCount,
+		hunk.NewStart,
+		hunk.NewCount,
+	)
+
+	result = append(result, header)
+
+	for _, op := range hunk.Operations {
+		switch op.Type {
+
+		case Equal:
+			result = append(result, " "+op.OldLine)
+
+		case Delete:
+			result = append(result, "-"+op.OldLine)
+
+		case Insert:
+			result = append(result, "+"+op.NewLine)
+		}
+	}
 
 	return result
 }
