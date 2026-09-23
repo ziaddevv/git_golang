@@ -53,9 +53,15 @@ func Run() {
 		err = BranchCommand()
 	case "checkout":
 		err = CheckoutCommand()
+	case "add":
+		err = AddCommand()
+	case "diff":
+		err = DiffCommand()
 	default:
-		fmt.Fprintf(os.Stderr, "mygit: '%s' is not a mygit command\n", os.Args[1])
+		fmt.Fprintf(os.Stderr, "mygit: '%s' is not a mygit command \n", os.Args[1])
+
 		return
+
 	}
 
 	if err != nil {

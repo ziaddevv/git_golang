@@ -169,7 +169,7 @@ func ParseObject(object []byte) (string, []byte, error) {
 	return objType, content, nil
 }
 
-func content(objectHash string) ([]byte, error) {
+func Content(objectHash string) ([]byte, error) {
 
 	data, err := ReadObject(objectHash)
 

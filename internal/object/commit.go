@@ -35,7 +35,7 @@ func NewCommit(hash, treeHash, author, commiter string, date int64, message stri
 }
 
 func GetCommitbyHash(commitHash string) (*Commit, error) {
-	fileContent, err := content(commitHash)
+	fileContent, err := Content(commitHash)
 	if err != nil {
 		return nil, err
 	}

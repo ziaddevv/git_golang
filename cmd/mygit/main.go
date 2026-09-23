@@ -1,6 +1,8 @@
 package main
 
-import "mygit/internal/cli"
+import (
+	"mygit/internal/cli"
+)
 
 func main() {
 
