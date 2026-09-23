@@ -222,7 +222,7 @@ func Diff() error {
 	filter := func() []FileDiff {
 		var result []FileDiff
 		for _, v := range unstagedChanges {
-			if v.Type == Modified {
+			if v.Type == Modified || v.Type == Deleted {
 				newDiff := &FileDiff{Path: v.Path, OldHash: indexMap[v.Path], NewHash: workDirMap[v.Path]}
 				result = append(result, *newDiff)
 			}
@@ -248,18 +248,26 @@ func CompareFiles(ModifiedFiles []FileDiff) error {
 
 	for _, file := range ModifiedFiles {
 
-		fileContentA, err := object.Content(file.OldHash)
-		if err != nil {
-			return fmt.Errorf("Fatal: Couldn't fetch files")
-		}
-		fileContentB, err := utils.ReadFile(file.Path)
+		var oldLines []string
+		var newLines []string
 
-		if err != nil {
-			return fmt.Errorf("Fatal: Couldn't fetch files")
+		if file.OldHash != "" {
+			fileContentA, err := object.Content(file.OldHash)
+			if err != nil {
+				return fmt.Errorf("fatal: couldn't fetch old file")
+			}
+
+			oldLines = SplitLines(fileContentA)
+		}
+		if file.NewHash != "" {
+			fileContentB, err := utils.ReadFile(file.Path)
+			if err != nil {
+				return fmt.Errorf("fatal: couldn't fetch new file")
+			}
+
+			newLines = SplitLines(fileContentB)
 		}
 
-		oldLines := SplitLines(fileContentA)
-		newLines := SplitLines(fileContentB)
 		myers := NewMyers(oldLines, newLines)
 
 		operations := myers.FindShortestEditScript()
@@ -549,12 +557,19 @@ func SplitLines(content []byte) []string {
 func FormatFileDiff(file FileDiff, hunks []Hunk) []string {
 	var result []string
 
-	result = append(result,
-		fmt.Sprintf("diff --git a/%s b/%s", file.Path, file.Path),
-		fmt.Sprintf("--- a/%s", file.Path),
-		fmt.Sprintf("+++ b/%s", file.Path),
-	)
+	result = append(result, fmt.Sprintf("diff --git a/%s b/%s", file.Path, file.Path))
 
+	if file.NewHash == "" {
+		result = append(result,
+			fmt.Sprintf("--- a/%s", file.Path),
+			"+++ /dev/null",
+		)
+	} else {
+		result = append(result,
+			fmt.Sprintf("--- a/%s", file.Path),
+			fmt.Sprintf("+++ b/%s", file.Path),
+		)
+	}
 	for _, hunk := range hunks {
 		result = append(result, FormatHunk(hunk)...)
 	}
