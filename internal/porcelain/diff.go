@@ -276,18 +276,38 @@ func CompareFiles(ModifiedFiles []FileDiff) error {
 func FormatOperations(operations []Operation) []string {
 	var result []string
 
+	oldStart := 1
+	newStart := 1
+
+	oldCount := 0
+	newCount := 0
+
 	for _, op := range operations {
 		switch op.Type {
 		case Equal:
 			result = append(result, " "+op.OldLine)
+			oldCount++
+			newCount++
 
 		case Delete:
 			result = append(result, "-"+op.OldLine)
+			oldCount++
 
 		case Insert:
 			result = append(result, "+"+op.NewLine)
+			newCount++
 		}
 	}
+
+	header := fmt.Sprintf(
+		"@@ -%d,%d +%d,%d @@",
+		oldStart,
+		oldCount,
+		newStart,
+		newCount,
+	)
+
+	result = append([]string{header}, result...)
 
 	return result
 }
