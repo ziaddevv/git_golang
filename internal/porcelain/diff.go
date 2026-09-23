@@ -258,8 +258,8 @@ func CompareFiles(ModifiedFiles []FileDiff) error {
 			return fmt.Errorf("Fatal: Couldn't fetch files")
 		}
 
-		oldLines := strings.Split(strings.TrimSuffix(string(fileContentA), "\n"), "\n")
-		newLines := strings.Split(strings.TrimSuffix(string(fileContentB), "\n"), "\n")
+		oldLines := SplitLines(fileContentA)
+		newLines := SplitLines(fileContentB)
 		myers := NewMyers(oldLines, newLines)
 
 		operations := myers.FindShortestEditScript()
@@ -358,21 +358,52 @@ type operationRange struct {
 func BuildHunks(operations []Operation, context int) []Hunk {
 	var ranges []operationRange
 
-	// find  range around every changed operation.
+	i := 0
 
-	for i, op := range operations {
-		if op.Type == Equal {
+	for i < len(operations) {
+
+		if operations[i].Type == Equal {
+			i++
 			continue
 		}
 
-		start := i - context
-		if start < 0 {
-			start = 0
+		// we found the start of a group of changes
+		changeStart := i
+
+		// keep moving while the operations are changes
+		// so Delete Delete Insert Insert are treated as one change
+		for i < len(operations) && operations[i].Type != Equal {
+			i++
 		}
 
-		end := i + context + 1
-		if end > len(operations) {
-			end = len(operations)
+		changeEnd := i
+
+		// add context lines before the change
+		start := changeStart
+		equalCount := 0
+
+		for start > 0 && equalCount < context {
+			start--
+
+			if operations[start].Type != Equal {
+				start++
+				break
+			}
+
+			equalCount++
+		}
+
+		// add context lines after the change
+		end := changeEnd
+		equalCount = 0
+
+		for end < len(operations) && equalCount < context {
+			if operations[end].Type != Equal {
+				break
+			}
+
+			end++
+			equalCount++
 		}
 
 		ranges = append(ranges, operationRange{
@@ -385,8 +416,8 @@ func BuildHunks(operations []Operation, context int) []Hunk {
 		return nil
 	}
 
-	//// there is a case where we have overlapping group of changes so it is bettter to merge them
-
+	// there is a case where we have overlapping group of changes
+	// so it is better to merge them
 	var merged []operationRange
 
 	for _, current := range ranges {
@@ -397,7 +428,7 @@ func BuildHunks(operations []Operation, context int) []Hunk {
 
 		last := &merged[len(merged)-1]
 
-		if current.start <= last.end {
+		if current.start < last.end {
 			if current.end > last.end {
 				last.end = current.end
 			}
@@ -407,7 +438,6 @@ func BuildHunks(operations []Operation, context int) []Hunk {
 	}
 
 	// convert back the ranges to hunks
-
 	var hunks []Hunk
 
 	for _, r := range merged {
@@ -415,6 +445,7 @@ func BuildHunks(operations []Operation, context int) []Hunk {
 			Operations: operations[r.start:r.end],
 		}
 
+		// find the line where this hunk starts in old and new file
 		oldLine := 1
 		newLine := 1
 
@@ -436,6 +467,7 @@ func BuildHunks(operations []Operation, context int) []Hunk {
 		hunk.OldStart = oldLine
 		hunk.NewStart = newLine
 
+		// count how many old and new lines are inside the hunk
 		for _, op := range hunk.Operations {
 			switch op.Type {
 
@@ -459,13 +491,13 @@ func BuildHunks(operations []Operation, context int) []Hunk {
 
 func FormatHunk(hunk Hunk) []string {
 	var result []string
+	oldRange := FormatRange(hunk.OldStart, hunk.OldCount)
+	newRange := FormatRange(hunk.NewStart, hunk.NewCount)
 
 	header := fmt.Sprintf(
-		"@@ -%d,%d +%d,%d @@",
-		hunk.OldStart,
-		hunk.OldCount,
-		hunk.NewStart,
-		hunk.NewCount,
+		"@@ -%s +%s @@",
+		oldRange,
+		newRange,
 	)
 
 	result = append(result, header)
@@ -485,4 +517,33 @@ func FormatHunk(hunk Hunk) []string {
 	}
 
 	return result
+}
+
+func FormatRange(start, count int) string {
+	if count == 0 {
+		start--
+	}
+
+	if count == 1 {
+		return fmt.Sprintf("%d", start)
+	}
+
+	return fmt.Sprintf("%d,%d", start, count)
+}
+
+func SplitLines(content []byte) []string {
+	s := string(content)
+
+	if s == "" {
+		return nil
+	}
+
+	lines := strings.Split(s, "\n")
+
+	// remove the extra empty element caused by the final newline
+	if lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	return lines
 }
