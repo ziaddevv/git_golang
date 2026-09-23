@@ -6,6 +6,7 @@ import (
 	"mygit/internal/object"
 	"mygit/internal/utils"
 	"mygit/internal/worktree"
+	"sort"
 	"strings"
 )
 
@@ -235,6 +236,10 @@ func Diff() error {
 	_ = modifiedFiles
 
 	// fmt.Println(ModifiedFiles)
+
+	sort.Slice(modifiedFiles, func(i, j int) bool {
+		return modifiedFiles[i].Path < modifiedFiles[j].Path
+	})
 
 	return CompareFiles(modifiedFiles)
 }
